@@ -1,0 +1,144 @@
+import React, { useEffect, useState } from "react";
+import {
+  Box,
+  Typography,
+  Card,
+  CardContent,
+  Table,
+  TableHead,
+  TableRow,
+  TableCell,
+  TableBody
+} from "@mui/material";
+import { DataGrid } from "@mui/x-data-grid";
+import DashboardLayout from "./DashboardLayout";
+
+export default function HudVillageMasterView() {
+  const [villages, setVillages] = useState([]);
+  const [summary, setSummary] = useState([]);
+
+  useEffect(() => {
+    const user = JSON.parse(localStorage.getItem("loggedInUser"));
+    if (!user || !user.hud_id) {
+      console.error("HUD ID not found in logged-in user data.");
+      return;
+    }
+    fetchVillages(user.hud_id);
+  }, []);
+
+  const fetchVillages = async (hud_id) => {
+    try {
+      const res = await fetch("http://localhost:3000/dashboard/village");
+      const data = await res.json();
+
+      const filteredData = data.filter((v) => v.hud_id === hud_id);
+      setVillages(filteredData);
+
+      const grouped = groupByHUD(filteredData);
+      setSummary(grouped);
+    } catch (err) {
+      console.error("Error fetching villages:", err);
+    }
+  };
+
+  const groupByHUD = (data) => {
+    const map = new Map();
+
+    data.forEach((v) => {
+      if (!map.has(v.hud_id)) {
+        map.set(v.hud_id, {
+          hud_id: v.hud_id,
+          hud_name: v.hud_name,
+          blocks: new Set(),
+          villages: 0
+        });
+      }
+
+      const hudData = map.get(v.hud_id);
+      hudData.blocks.add(v.block_id);
+      hudData.villages += 1;
+    });
+
+    return Array.from(map.values()).map((item) => ({
+      hud_id: item.hud_id,
+      hud_name: item.hud_name,
+      block_count: item.blocks.size,
+      village_count: item.villages
+    }));
+  };
+
+  const columns = [
+    { field: "id", headerName: "ID", width: 100 },
+    // { field: "hud_id", headerName: "HUD ID", width: 120 },
+    { field: "hud_name", headerName: "HUD Name", width: 180 },
+    // { field: "block_id", headerName: "Block ID", width: 120 },
+    { field: "block_name", headerName: "Block Name", width: 280 },
+    // { field: "village_id", headerName: "Village ID", width: 120 },
+    { field: "village_name", headerName: "Village Name", width: 500 }
+  ];
+
+  const detailedRows = villages.map((v, index) => ({
+    id: index + 1,
+    ...v
+  }));
+
+  return (
+    <DashboardLayout>
+      <Box p={2} pt={15} pl={10}>
+        <Typography variant="h5" gutterBottom>
+          HUD-wise Village Summary
+        </Typography>
+
+        <Card sx={{ mb: 4 }}>
+          <CardContent>
+            <Table>
+              <TableHead>
+                <TableRow>
+                  {/* <TableCell sx={{ color: "black", fontWeight: "bold" }}>HUD ID</TableCell> */}
+                  <TableCell sx={{ color: "black", fontWeight: "bold" }}>HUD Name</TableCell>
+                  <TableCell sx={{ color: "black", fontWeight: "bold" }}>Block Count</TableCell>
+                  <TableCell sx={{ color: "black", fontWeight: "bold" }}>Village Count</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {summary.map((row, idx) => (
+                  <TableRow key={idx}>
+                    {/* <TableCell>{row.hud_id}</TableCell> */}
+                    <TableCell>{row.hud_name}</TableCell>
+                    <TableCell>{row.block_count}</TableCell>
+                    <TableCell>{row.village_count}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+
+        <Typography variant="h6" gutterBottom>
+          Village Detail View
+        </Typography>
+
+        <Card>
+          <CardContent>
+            <div style={{ height: 500, width: "100%" }}>
+              <DataGrid
+                rows={detailedRows}
+                columns={columns}
+                pageSize={10}
+                rowsPerPageOptions={[10, 20, 50]}
+                sx={{
+                  "& .MuiDataGrid-columnHeaders": {
+                    backgroundColor: "#2A2F5B",
+                    color: "black",
+                    fontWeight: "bold",
+                    fontSize: "1.1rem"
+                  }
+                }}
+              />
+            </div>
+          </CardContent>
+        </Card>
+      </Box>
+    </DashboardLayout>
+  );
+}
