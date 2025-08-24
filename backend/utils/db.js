@@ -281,6 +281,7 @@ CREATE TABLE IF NOT EXISTS chl_hud_block_users (
   hud_name VARCHAR(100) NOT NULL,
   block_id VARCHAR(50) NOT NULL,
   block_name VARCHAR(100) NOT NULL,
+  designation VARCHAR(100) NOT NULL,
   module VARCHAR(50) NOT NULL DEFAULT 'chlorination',
   role VARCHAR(50) NOT NULL DEFAULT 'block_user',
   status VARCHAR(20) NOT NULL DEFAULT 'Active',

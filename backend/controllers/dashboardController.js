@@ -4952,42 +4952,50 @@ export const updateBlockUser = async (req, res) => {
 
   try {
     const db = await dbPromise;
-    const user = db.execute(`SELECT * FROM chl_hud_block_users WHERE user_id = ?`, [user_id]);
-    if (!user) {
+
+    const [userRows] = await db.execute(
+      `SELECT * FROM chl_hud_block_users WHERE user_id = ?`,
+      [user_id]
+    );
+
+    if (userRows.length === 0) {
       return res.status(404).json({ message: "User not found" });
     }
 
-    let hashedPassword = user.password;
+    let hashedPassword = userRows[0].password;
     if (password) {
       hashedPassword = await bcrypt.hash(password, 10);
     }
 
-    const stmt = db.execute(`
-      UPDATE chl_hud_block_users SET
-      username = ?, email = ?, phone_number = ?, password = ?,
-      hud_id = ?, hud_name = ?, block_id = ?, block_name = ?,
-      module = ?, role = ?, status = ?
-      WHERE user_id = ?
-    `, [username,
-      email,
-      phone_number,
-      hashedPassword,
-      hud_id,
-      hud_name,
-      block_id,
-      block_name,
-      module,
-      role,
-      status,
-      user_id]);
-
-    
+    const [stmt] = await db.execute(
+      `UPDATE chl_hud_block_users SET
+        username = ?, email = ?, phone_number = ?, password = ?,
+        hud_id = ?, hud_name = ?, block_id = ?, block_name = ?, designation = ?,
+        module = ?, role = ?, status = ?
+        WHERE user_id = ?`,
+      [
+        username,
+        email,
+        phone_number,
+        hashedPassword,
+        hud_id,
+        hud_name,
+        block_id,
+        block_name,
+        designation,
+        module,
+        role,
+        status,
+        user_id
+      ]
+    );
 
     if (stmt.affectedRows === 0) {
       return res.status(404).json({ message: "User not found" });
     }
 
     return res.json({ message: "Block user updated" });
+
   } catch (err) {
     console.error("updateBlockUser error:", err);
     return res.status(500).json({ message: "Server error" });
