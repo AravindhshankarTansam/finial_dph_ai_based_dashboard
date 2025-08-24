@@ -503,9 +503,7 @@ async function fetchUsers() {
               <MenuItem value="BMO">BMO</MenuItem>
               <MenuItem value="BHS">BHS</MenuItem>
               <MenuItem value="MO">MO</MenuItem>
-              <MenuItem value="HI">HI</MenuItem>
-              <MenuItem value="MTM HI">MTM HI</MenuItem>
-            </TextField>
+              </TextField>
 
          <TextField
               fullWidth
